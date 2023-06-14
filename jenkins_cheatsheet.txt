@@ -1,0 +1,205 @@
+Lab 1: Create and setup Jenkins master node
+
+Task 1: Launching VM on Azure Portal
+Check the student guide.
+
+Task 2 : Install Jenkins 
+
+#This is the Debian package repository of Jenkins to automate installation and upgrade. To use this repository, first add the key to your system:
+curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+
+#Then add a Jenkins apt repository entry:
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/ | sudo tee  /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+#Update your local package index, then finally install Jenkins and Java:
+sudo apt update
+sudo apt-get install fontconfig openjdk-11-jre
+sudo apt-get install jenkins
+
+#Verify Jenkins Installation.
+sudo systemctl status jenkins
+jenkins --version
+
+-------------------------------------------------------------------------------
+Lab 2: Learning to use Git and its basic operations.
+
+Task 1: Creating a Remote Repository Using GitHub
+Task 2: Creating PAT Token
+
+Task 3: Initializing the local git repository and committing changes
+# On the Jenkins-Master anchor EC2, do the below:
+cd ~/
+# Check GIT version. 
+git --version
+# If it does not exist, then you can install with below command. Else no need to execute below 
+# line:  sudo apt install git -y
+
+# Download the Java code we are going to use in the CICD pipeline
+wget https://s3.ap-south-1.amazonaws.com/files.cloudthat.training/devops/devops-essentials/hello-world-master.zip
+
+#Install the unzip package before using it
+apt install unzip
+unzip hello-world-master.zip -d hello-world-master
+
+#verify the downloaded files 
+ls
+
+#Delete the zip file as its not longer needed and verify the deletion
+rm hello-world-master.zip
+ls
+
+#Change directory and verify files 
+cd hello-world-master
+ls
+
+#For that Initialize git command in this directory using ‘git init .’ This command will initialize an empty Git repository in /home/ubuntu/hello-world-war-master/.git/  directory. 
+git init .
+
+# Check the email and user name configured.
+git config --global --list
+
+# If you need to change it, you can use below:
+git config --global user.email "< Add your email >"
+git config --global user.name "< Add your Name >"
+
+#Use the ‘git add .’ command to add the contents of the hello-world-war-master directory to a staging area or index for preparing them to be included in the next git commit command. 
+git status
+git add .
+git status
+
+#Now do a git commit to record the changes that are staged by git add into your local git repository. You can also pass a message using the -m attribute with git commit. 
+git log
+git commit -m "This is the first commit"
+git log
+git status
+
+#Now add a remote repository using git remote add origin command and the Repository URL 
+git remote add origin < Replace your Repository URL > 
+# Ex: git remote add origin https://github.com/martuj/hello-world.git
+
+git remote show origin
+
+
+Task 4: Pushing the Code into your Remote GitHub Repository  
+===========================================================
+# To push code to Github, You need to generate a Personal Access Token (PAT) in github.
+# Go to your Github homepage. Click on settings in right side top menu. Click on Developer settings on 
+# left side menu bottom. Click on Personal Access Token on left side menu. Click on Generate New Token
+# Under 'Select Scopes' select all items. Click on 'generate token'. Copy the token
+
+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
+
+git push origin master 
+# when it asks for password, enter the PAT Token
+Token: <enter your PAT> 
+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 # Use your respective PAT
+# When you enter the token, the cursor does not move. It's the expected behavior
+ 
+
+#Create a new branch named dev by executing below command 
+git branch dev
+git branch
+
+#We will switch to dev branch by executing git checkout command
+git checkout dev
+git branch
+
+#We will create an index.html file and write some lines into it 
+vi index.html
+
+# Press INSERT and add the below content
+
+<html>
+<body>
+<h1> Hi There! This file is added in dev branch </h1>
+</body>
+</html>
+
+# Save vi using ESCAPE + :wq!
+
+#You can check untracked files by using git status command 
+git status
+
+#You can execute git add command to add an untracked file to stage.  
+git add index.html
+git status
+
+#We will commit the change by using git commit command 
+git commit -m "adding new file index.html in new branch dev"
+git log
+
+#Here we are pushing the branch to the remote repository to GitHub.  Provide your GitHub Username and copied Personal access token as Password and see a new branch dev is being created in your hello-world repository. 
+git push origin dev
+when it asks for password, enter PAT Token
+Token: <your PAT>
+
+#We will create another branch named prod 
+git branch
+git branch prod
+git branch
+
+#We will switch to prod branch by executing the command: 
+git checkout prod
+git branch
+
+#We will merge prod branch with dev branch by executing git merge command 
+git merge dev
+
+#Now we will push prod branch to the remote repo using git push command 
+git push origin prod
+
+Token: <PAT>
+
+#We will merge prod branch with master branch by executing git merge command and push to master
+git checkout master
+git merge prod
+git push origin master
+# when it asks for password, enter the PAT Token
+Token: <enter your PAT> 
+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 # Use your respective PAT
+# When you enter the token, the cursor does not move. It's the expected behavior
+-------------------------------------------------------------------------------------------------------
+
+Lab 3: Configure Jenkins and Build a sample application 
+
+Task 1: Configuring Jenkins   
+
+#On the Jenkins-Server VM , run the following command to get the Initial admin password for the Jenkins website. Copy the password. 
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword  
+
+-------------------------------------------------------------------------------------
+Lab 5: Add Docker Machine as Jenkins Slave, build and deploy code in Docker Host as a container
+
+Task 1: Create Jenkins Node VM on Azure Portal
+
+Note: Jenkins Node must be in the same Vnet as Jenkins Master
+
+Task 2: Install Docker
+curl -SSL https://get.docker.com/ | sh
+systemctl status docker
+docker --version
+
+Task 3: Java Installation
+sudo apt update
+sudo apt install openjdk-11-jre
+java -version
+
+Task 4: Create a DockerFile
+cd ~  
+vi Dockerfile 
+
+Add the below contents to the file and save it
+# Pull Base Image  
+
+FROM tomcat:8-jre8  
+
+# Maintainer  
+
+MAINTAINER "CloudThat"  
+
+# Copy the war file to images tomcat path  
+
+ADD hello-world-war-1.0.0.war /usr/local/tomcat/webapps/  
+
+
+
